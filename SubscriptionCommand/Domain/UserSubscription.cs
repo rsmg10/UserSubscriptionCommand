@@ -10,6 +10,7 @@ using SubscriptionCommand.Commands.CancelInvitation;
 using SubscriptionCommand.Commands.RejectInvitation;
 using SubscriptionCommand.Exceptions;
 using SubscriptionCommand.Extensions;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 
 namespace SubscriptionCommand.Domain
 {
@@ -21,40 +22,40 @@ namespace SubscriptionCommand.Domain
         private List<Invitation> Invitations { get; set; } = new List<Invitation>();
         private bool IsJoined { get; set; }
 
-
+ 
         public void RejectInvitation(RejectInvitationCommand command)
         {
- 
+
             if (IsJoined)
                 throw new AlreadySentException("This user already joined");
-            
+
             if (Invitations.Last().Status is not InvitationStatus.Pending)
                 throw new AlreadySentException("You do not have a pending invitation with this user");
-            
+
             if (Type is SubscriptionType.Personal)
                 throw new BusinessRuleViolationException("this subscription's type is invalid");
-            
+
 
             ApplyNewChange(command.ToEvent(Sequence + 1));
         }
-        
+
         public void AcceptInvitation(AcceptInvitationCommand command)
         {
             if (IsJoined)
                 throw new AlreadySentException("This user already joined");
-            
+
             if (Invitations.Last().Status is not InvitationStatus.Pending)
                 throw new AlreadySentException("You do not have a pending invitation with this user");
-            
+
             if (Type is SubscriptionType.Personal)
                 throw new BusinessRuleViolationException("this subscription's type is invalid");
-            
+
 
             ApplyNewChange(command.ToEvent(Sequence + 1));
-            
+
         }
-        
-        
+
+
         public void CancelInvitation(CancelInvitationCommand command)
         {
             if (command.UserId != UserId)
@@ -81,7 +82,7 @@ namespace SubscriptionCommand.Domain
             {
                 throw new AlreadySentException("This user already joined");
             }
-            if (Invitations.Any() &&  Invitations.Last().Status is not InvitationStatus.Rejected)
+            if (Invitations.Any() &&( Invitations.Last().Status is  InvitationStatus.Accepted || Invitations.Last().Status is InvitationStatus.Pending))
             {
                 throw new AlreadySentException("You Already have an invitation with this user");
             }
@@ -89,9 +90,9 @@ namespace SubscriptionCommand.Domain
             {
                 throw new BusinessRuleViolationException("this subscription's type is invalid");
             }
-            
+
             ApplyNewChange(command.ToEvent(Sequence + 1));
-              
+
         }
         protected override void Mutate(Event @event)
         {
@@ -117,26 +118,32 @@ namespace SubscriptionCommand.Domain
 
         private void Mutate(InvitationCancelled @event)
         {
-            var invitation = Invitations.MaxBy(x=> x.Id) ?? throw new ArgumentNullException();
+            Sequence = @event.Sequence;
+            var invitation = Invitations.MaxBy(x => x.Id) ?? throw new ArgumentNullException();
             invitation.Status = InvitationStatus.Cancelled;
         }
 
         private void Mutate(InvitationRejected @event)
         {
-            var invitation = Invitations.MaxBy(x=> x.Id) ?? throw new ArgumentNullException();
+            Sequence = @event.Sequence;
+            var invitation = Invitations.MaxBy(x => x.Id) ?? throw new ArgumentNullException();
             invitation.Status = InvitationStatus.Rejected;
             IsJoined = false;
         }
 
         private void Mutate(InvitationAccepted @event)
         {
-            var invitation = Invitations.MaxBy(x=> x.Id) ?? throw new ArgumentNullException();
+
+            Sequence = @event.Sequence;
+            var invitation = Invitations.MaxBy(x => x.Id) ?? throw new ArgumentNullException();
             invitation.Status = InvitationStatus.Accepted;
             IsJoined = true;
         }
 
         private void Mutate(InvitationSent @event)
         {
+            Sequence = @event.Sequence;
+            UserId = Guid.Parse(@event.UserId); 
             Invitations.Add(Invitation.Create(@event.Data.UserId, @event.Data.SubscriptionId));
         }
     }

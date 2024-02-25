@@ -26,7 +26,7 @@ namespace SubscriptionCommand.Commands.AcceptInvitation
                 throw new BusinessRuleViolationException("invalid Id");
             
             
-            var userSubscription = UserSubscription.LoadFromHistory(await _eventStore.GetAllAsync(GuidExtensions.CombineGuids(request.SubscriptionId, request.MemberId), cancellationToken));
+            var userSubscription = UserSubscription.LoadFromHistory(events);
 
             userSubscription.AcceptInvitation(request);
             await _eventStore.CommitAsync(userSubscription, cancellationToken);

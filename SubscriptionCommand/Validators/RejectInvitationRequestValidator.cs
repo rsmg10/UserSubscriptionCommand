@@ -7,8 +7,9 @@ public class RejectInvitationRequestValidator : AbstractValidator<RejectInvitati
 {
     public RejectInvitationRequestValidator()
     {
-        RuleFor(x => x.AccountId).NotEmpty().NotNull();
-        RuleFor(x => x.MemberId).NotEmpty().NotNull(); 
+        RuleFor(x => x.AccountId).NotEmpty().NotNull(); 
+        RuleFor(x => x.MemberId).NotEmpty().NotNull().Must(((request, s) => request.MemberId != request.UserId)).WithMessage("user Id must not be equal to member Id");
+
         RuleFor(x => x.SubscriptionId).NotEmpty().NotNull();
         RuleFor(x => x.UserId).NotEmpty().NotNull();
     }

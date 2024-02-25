@@ -35,6 +35,7 @@ namespace SubscriptionCommand.Commands.RejectInvitation
 
             userSubscription.RejectInvitation(request);
 
+            await _eventStore.CommitAsync(userSubscription, cancellationToken);
             return new Response()
             {
                 Id = userSubscription.Id.ToString(),

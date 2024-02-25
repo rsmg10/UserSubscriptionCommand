@@ -33,11 +33,12 @@ namespace SubscriptionCommand.Commands.CancelInvitation
             var userSubscription = UserSubscription.LoadFromHistory(events);
             
             userSubscription.CancelInvitation(request);
+            await _eventStore.CommitAsync(userSubscription, cancellationToken);
 
             return new Response()
             {
                 Id = userSubscription.Id.ToString(),
-                Message = "Invitation Rejected Successfully"
+                Message = "Invitation Cancelled Successfully"
             };
             
             

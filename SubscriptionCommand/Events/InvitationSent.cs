@@ -2,7 +2,7 @@
 {
     public record InvitationSent(
             Guid AggregateId,
-            InvitationSentData Data,
+            InvitationSentData? Data,
             DateTime DateTime,
             int Sequence,
             string UserId,

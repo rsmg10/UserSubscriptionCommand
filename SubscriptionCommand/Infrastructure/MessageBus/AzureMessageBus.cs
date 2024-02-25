@@ -12,10 +12,10 @@ namespace SubscriptionCommand.Infrastructure.MessageBus
         private readonly object _lock = new();
         private readonly ServiceBusSender? _sender;
         private bool IsBusy { get; set; }
-        public AzureMessageBus(IServiceProvider provider, ServiceBusClient client = null)
+        public AzureMessageBus(IServiceProvider provider, ServiceBusClient client)
         {
             _provider = provider;
-            _sender = client?.CreateSender("subscriptionCommand") ;
+            _sender = client.CreateSender("radwan-user-subscription-command") ;
         }
 
 
@@ -32,6 +32,10 @@ namespace SubscriptionCommand.Infrastructure.MessageBus
 
                         PublishMessages().GetAwaiter().GetResult();
                     }
+                }
+                catch(Exception e)
+                {
+
                 }
                 finally
                 {
@@ -70,8 +74,7 @@ namespace SubscriptionCommand.Infrastructure.MessageBus
                         SessionId = message.Event.AggregateId.ToString(),
                         Subject = message.Event.Type
                     };
-
-                    if (_sender == null) return;
+                     
                     await _sender.SendMessageAsync(serviceBusMessage);
 
                     dbContext.Outbox.Remove(message);

@@ -40,7 +40,6 @@ namespace SubscriptionCommand.Test
                 UserId = Guid.NewGuid().ToString(),
             });
               
-
             using (var scope = _factory.Services.CreateScope())
             {
                 var context = scope.ServiceProvider.GetRequiredService<ApplicationDatabase>();
@@ -62,8 +61,7 @@ namespace SubscriptionCommand.Test
         [InlineData("AA66601C-8A7E-43BC-BC95-BDCF6F5B79A3", "BA66601C-8A7E-43BC-BC95-BDCF6F5B79A3", 1, "9A687FB1-5555-4B39-BBDD-8202C0E77038", "")] 
 
         public async Task SendInvitation_SendInvalidData_ValidationError(string accountId, string memberId, int permission, string subscriptionId, string userId)
-        {
-            // send invitation using grpc and assert validation exception 
+        { 
  
             var client = new SubscriptionCommandProto.SubscriptionCommand.SubscriptionCommandClient(_factory.CreateGrpcChannel());
         
@@ -85,8 +83,7 @@ namespace SubscriptionCommand.Test
         [InlineData("BA66601C-8A7E-43BC-BC95-BDCF6F5B79A3", "1377561B-1C64-4DF9-8767-29C1C05F75B1", 7, "9A687FB1-5555-4B39-BBDD-8202C0E77038", "1377561B-1C64-4DF9-8767-29C1C05F75B1")]
  
         public async Task SendInvitation_UserIdEqualMemberId_ValidationError(string accountId, string memberId, int permission, string subscriptionId, string userId)
-        {
-            // send invitation using grpc and assert validation exception 
+        { 
  
             var client = new SubscriptionCommandProto.SubscriptionCommand.SubscriptionCommandClient(_factory.CreateGrpcChannel());
         
@@ -104,7 +101,6 @@ namespace SubscriptionCommand.Test
             Assert.Equal(StatusCode.InvalidArgument, ex.StatusCode);
         }
         [Fact]
-        // [InlineData("BA66601C-8A7E-43BC-BC95-BDCF6F5B79A3", "1377561B-1C64-4DF9-8767-29C1C05F75B1", 7, "9A687FB1-5555-4B39-BBDD-8202C0E77038", "1377561B-1C64-4DF9-8767-29C1C05F75B1")]
  
         public async Task SendAndAcceptInvitation_Valid()
         {
@@ -136,8 +132,135 @@ namespace SubscriptionCommand.Test
             Assert.NotNull(acceptInvitationAsync);
             
         }
+        [Fact]
+        public async Task SendAndRejectInvitation_Valid()
+        {
+            var userId = Guid.NewGuid().ToString();
+            var memberId = Guid.NewGuid().ToString();
+            var subscriptionId = Guid.NewGuid().ToString();
+            var accountId = Guid.NewGuid().ToString();
 
-        
+            var client = new SubscriptionCommandProto.SubscriptionCommand.SubscriptionCommandClient(_factory.CreateGrpcChannel());
+            var sendInvitationAsync = await client.SendInvitationAsync(new SubscriptionCommandProto.SendInvitationRequest
+            {
+                AccountId = accountId,
+                MemberId = memberId,
+                Permission = 7,
+                SubscriptionId = subscriptionId,
+                UserId = userId
+            });
+
+            Assert.NotNull(sendInvitationAsync);
+
+            var rejectInvitationAsync = await client.RejectInvitationAsync(new SubscriptionCommandProto.RejectInvitationRequest()
+            {
+                AccountId = accountId,
+                MemberId = memberId,
+                SubscriptionId = subscriptionId,
+                UserId = userId
+            });
+
+            Assert.NotNull(rejectInvitationAsync);
+        }
+
+        [Fact]
+        public async Task SendAndRejectThenSendInvitation_Valid()
+        {
+            var userId = Guid.NewGuid().ToString();
+            var memberId = Guid.NewGuid().ToString();
+            var subscriptionId = Guid.NewGuid().ToString();
+            var accountId = Guid.NewGuid().ToString();
+
+            var client = new SubscriptionCommandProto.SubscriptionCommand.SubscriptionCommandClient(_factory.CreateGrpcChannel());
+            var request = new SendInvitationRequest
+            {
+                AccountId = accountId,
+                MemberId = memberId,
+                Permission = 7,
+                SubscriptionId = subscriptionId,
+                UserId = userId
+            };
+            var sendInvitationAsync = await client.SendInvitationAsync(request);
+
+            Assert.NotNull(sendInvitationAsync);
+
+            var rejectInvitationAsync = await client.RejectInvitationAsync(new SubscriptionCommandProto.RejectInvitationRequest()
+            {
+                AccountId = accountId,
+                MemberId = memberId,
+                SubscriptionId = subscriptionId,
+                UserId = userId
+            });
+
+            Assert.NotNull(rejectInvitationAsync);
+ 
+            var secondSendInvitationAsync = await client.SendInvitationAsync(request);
+
+            Assert.NotNull(secondSendInvitationAsync);
+            Assert.True(Guid.TryParse(secondSendInvitationAsync.Id, out _));
+
+        }
+
+
+        [Fact]
+        public async Task SendInvitationTwice_RejectSecondOne_Valid()
+        {
+            var userId = Guid.NewGuid().ToString();
+            var memberId = Guid.NewGuid().ToString();
+            var subscriptionId = Guid.NewGuid().ToString();
+            var accountId = Guid.NewGuid().ToString();
+
+            SendInvitationRequest request = new SendInvitationRequest
+            {
+                AccountId = accountId,
+                MemberId = memberId,
+                Permission = 7,
+                SubscriptionId = subscriptionId,
+                UserId = userId
+            };
+            var client = new SubscriptionCommandProto.SubscriptionCommand.SubscriptionCommandClient(_factory.CreateGrpcChannel());
+    
+            var sendInvitationAsync = await client.SendInvitationAsync(request);
+
+            Assert.NotNull(sendInvitationAsync);
+            Assert.ThrowsAsync<RpcException>(async () => await client.SendInvitationAsync(request));
+            
+        }
+
+        [Fact]
+        public async Task SendAndCancelInvitation_Valid()
+        {
+            var userId = Guid.NewGuid().ToString();
+            var memberId = Guid.NewGuid().ToString();
+            var subscriptionId = Guid.NewGuid().ToString();
+            var accountId = Guid.NewGuid().ToString();
+
+            var client = new SubscriptionCommandProto.SubscriptionCommand.SubscriptionCommandClient(_factory.CreateGrpcChannel());
+            var sendInvitationAsync = await client.SendInvitationAsync(new SubscriptionCommandProto.SendInvitationRequest
+            {
+                AccountId = accountId,
+                MemberId = memberId,
+                Permission = 7,
+                SubscriptionId = subscriptionId,
+                UserId = userId
+            });
+
+            Assert.NotNull(sendInvitationAsync);
+
+            var cancelnvitationAsync = await client.CancelInvitationAsync(new SubscriptionCommandProto.CancelInvitationRequest()
+            {
+                AccountId = accountId,
+                MemberId = memberId,
+                SubscriptionId = subscriptionId,
+                UserId = userId
+            });
+
+            Assert.NotNull(cancelnvitationAsync);
+
+
+        }
+
+
 
     }
 }

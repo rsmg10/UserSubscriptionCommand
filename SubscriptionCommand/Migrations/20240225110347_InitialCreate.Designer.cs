@@ -12,8 +12,8 @@ using SubscriptionCommand.Infrastructure.Presistance;
 namespace SubscriptionCommand.Migrations
 {
     [DbContext(typeof(ApplicationDatabase))]
-    [Migration("20240224081843_Initial")]
-    partial class Initial
+    [Migration("20240225110347_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -35,7 +35,7 @@ namespace SubscriptionCommand.Migrations
                     b.ToTable("Outbox");
                 });
 
-            modelBuilder.Entity("SubscriptionCommand.Events.Event", b =>
+            modelBuilder.Entity("SubscriptionCommand.Events.EventEntity", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -46,11 +46,18 @@ namespace SubscriptionCommand.Migrations
                     b.Property<Guid>("AggregateId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("Data")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<DateTime>("DateTime")
                         .HasColumnType("datetime2");
 
                     b.Property<int>("Sequence")
                         .HasColumnType("int");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("UserId")
                         .IsRequired()
@@ -61,12 +68,15 @@ namespace SubscriptionCommand.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("Sequence", "AggregateId")
+                        .IsUnique();
+
                     b.ToTable("Events");
                 });
 
             modelBuilder.Entity("SubscriptionCommand.Domain.Outbox", b =>
                 {
-                    b.HasOne("SubscriptionCommand.Events.Event", "Event")
+                    b.HasOne("SubscriptionCommand.Events.EventEntity", "Event")
                         .WithOne()
                         .HasForeignKey("SubscriptionCommand.Domain.Outbox", "Id")
                         .OnDelete(DeleteBehavior.Cascade)

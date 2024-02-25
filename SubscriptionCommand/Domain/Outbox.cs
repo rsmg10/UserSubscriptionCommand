@@ -8,11 +8,11 @@ namespace SubscriptionCommand.Domain
         {
             
         }
-        public Outbox(Event @event)
+        public Outbox(EventEntity @event)
         {
             Event = @event;
         }
         public int Id{ get; set; }
-        public Event? Event{ get; set; }
+        public EventEntity? Event{ get; set; }
     }
 }

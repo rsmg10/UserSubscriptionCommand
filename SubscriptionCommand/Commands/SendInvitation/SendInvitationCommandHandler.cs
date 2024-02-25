@@ -17,7 +17,7 @@ namespace SubscriptionCommand.Commands.SendInvitation
         }
 
         public async Task<Response> Handle(SendInvitationCommand request, CancellationToken cancellationToken)
-         {
+        {
             // validate subscriptionId and that it is subscription is particular type
             // either call command side or listen to event
             // validate UserId
@@ -25,24 +25,11 @@ namespace SubscriptionCommand.Commands.SendInvitation
             if (request.UserId == request.MemberId)
                 throw new BusinessRuleViolationException("cant send invitation to same user");
 
-
-            try
-            {            
-                
-                await _eventStore.GetAllAsync(GuidExtensions.CombineGuids(request.SubscriptionId, request.MemberId), cancellationToken);
-
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(e);
-                throw;
-            }
-            
             var events = await _eventStore.GetAllAsync(GuidExtensions.CombineGuids(request.SubscriptionId, request.MemberId), cancellationToken);
 
             bool isNew = (!events.Any() || events is null);
 
-            var userSubscription = isNew ? 
+            var userSubscription = isNew ?
                  new UserSubscription() :
                 UserSubscription.LoadFromHistory(events!);
 

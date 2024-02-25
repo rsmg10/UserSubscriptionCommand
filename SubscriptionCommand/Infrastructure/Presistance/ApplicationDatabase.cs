@@ -17,7 +17,7 @@ namespace SubscriptionCommand.Infrastructure.Presistance
 
         }
 
-        public DbSet<Event> Events { get; set; }
+        public DbSet<EventEntity> Events { get; set; }
         public DbSet<Outbox> Outbox { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)

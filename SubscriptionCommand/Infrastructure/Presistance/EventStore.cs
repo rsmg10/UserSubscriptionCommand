@@ -3,12 +3,13 @@ using SubscriptionCommand.Abstraction;
 using SubscriptionCommand.Domain;
 using SubscriptionCommand.Events;
 using SubscriptionCommand.Infrastructure.MessageBus;
+using System.Text.Json;
 
 namespace SubscriptionCommand.Infrastructure.Presistance
 {
     public class EventStore : IEventStore
     {
-        private readonly ApplicationDatabase _db ;
+        private readonly ApplicationDatabase _db;
         private readonly AzureMessageBus _publisher;
 
         public EventStore(ApplicationDatabase db, AzureMessageBus publisher)
@@ -19,25 +20,51 @@ namespace SubscriptionCommand.Infrastructure.Presistance
 
         public async Task CommitAsync(UserSubscription userSubscription, CancellationToken cancellationToken)
         {
-                var events = userSubscription.GetUncommittedEvents();
-             
-                var messages = events.Select(x => new Outbox(x));
+            var events = userSubscription.GetUncommittedEvents();
 
-                await _db.Events.AddRangeAsync(events, cancellationToken);
-                await _db.Outbox.AddRangeAsync(messages, cancellationToken);
+            var dbEvents = events.Select(x => new EventEntity
+            {
+                AggregateId = x.AggregateId,
+                Data = JsonSerializer.Serialize((object)((dynamic)x).Data),
+                DateTime = x.DateTime,
+                Id = x.Id,
+                Sequence = x.Sequence,
+                Type = x.Type,
+                UserId = x.UserId,
+                Version = x.Version,
+            }).ToList();
 
-                await _db.SaveChangesAsync(cancellationToken);
+            var messages = dbEvents.Select(x => new Outbox(x)).ToList();
+            //await _db.Events.AddRangeAsync(dbEvents, cancellationToken);
+            await _db.Outbox.AddRangeAsync(messages, cancellationToken);
 
-                _publisher.Publish();
+            await _db.SaveChangesAsync(cancellationToken);
+
+            _publisher.Publish();
 
         }
 
         public async Task<List<Event>> GetAllAsync(Guid aggregateId, CancellationToken cancellationToken)
         {
-            return await _db.Events.Where(e => e.AggregateId == aggregateId)
+
+            var events = await _db.Events.Where(e => e.AggregateId == aggregateId)
                 .OrderBy(e => e.Sequence).ToListAsync(cancellationToken: cancellationToken);
+
+            List<Event> events1 = events.Select(e => MapToEvent(e)).ToList();
+            return events1;
+
         }
-        
-  
+        public Event MapToEvent(EventEntity e)
+        { 
+ 
+            return e.Type switch
+            {
+                nameof(InvitationSent) => new InvitationSent(e.AggregateId, JsonSerializer.Deserialize<InvitationSentData>(e.Data), e.DateTime, e.Sequence, e.UserId, e.Version),
+                nameof(InvitationAccepted) => new InvitationAccepted(e.AggregateId, JsonSerializer.Deserialize<InvitationAcceptedData>(e.Data), e.DateTime, e.Sequence, e.UserId, e.Version),
+                nameof(InvitationCancelled) => new InvitationCancelled(e.AggregateId, JsonSerializer.Deserialize<InvitationCancelledData>(e.Data), e.DateTime, e.Sequence, e.UserId, e.Version),
+                nameof(InvitationRejected) => new InvitationRejected(e.AggregateId, JsonSerializer.Deserialize<InvitationRejectedData>(e.Data), e.DateTime, e.Sequence, e.UserId, e.Version),
+                _ => throw new Exception("Type not defined Exception"),
+            };
+        }
     }
 }
