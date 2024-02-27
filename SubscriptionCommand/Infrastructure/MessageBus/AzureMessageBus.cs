@@ -15,7 +15,7 @@ namespace SubscriptionCommand.Infrastructure.MessageBus
         public AzureMessageBus(IServiceProvider provider, ServiceBusClient client)
         {
             _provider = provider;
-            _sender = client.CreateSender("radwan-user-subscription-command") ;
+            _sender = client.CreateSender("radwan-user-subscription-command-2") ;
         }
 
 

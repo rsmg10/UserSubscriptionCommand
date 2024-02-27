@@ -12,5 +12,4 @@ public class CancelInvitationRequestValidator : AbstractValidator<CancelInvitati
         RuleFor(x => x.SubscriptionId).NotEmpty().NotNull(); 
         RuleFor(x => x.UserId).NotEmpty().NotNull();
     }
-    
 }
