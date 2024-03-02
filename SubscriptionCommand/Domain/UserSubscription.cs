@@ -2,7 +2,6 @@
 using SubscriptionCommand.Commands.SendInvitation;
 using SubscriptionCommand.Domain.Enums;
 using SubscriptionCommand.Events;
-using SubscriptionCommand.Extenstions;
 using System.Security.Principal;
 using SubscriptionCommand.Abstraction;
 using SubscriptionCommand.Commands.AcceptInvitation;
@@ -11,6 +10,11 @@ using SubscriptionCommand.Commands.RejectInvitation;
 using SubscriptionCommand.Exceptions;
 using SubscriptionCommand.Extensions;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using SubscriptionCommand.Commands.ChangePermission;
+using SubscriptionCommand.Commands.JoinMember;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
+using SubscriptionCommand.Commands.LeaveSubscription;
+using SubscriptionCommand.Commands.RemoveMember;
 
 namespace SubscriptionCommand.Domain
 {
@@ -19,6 +23,7 @@ namespace SubscriptionCommand.Domain
         public UserSubscription() { }
         public Guid UserId { get; set; }
         public SubscriptionType Type { get; set; }
+        public Permissions Permission { get; set; }
         private List<Invitation> Invitations { get; set; } = new List<Invitation>();
         private bool IsJoined { get; set; }
 
@@ -76,6 +81,7 @@ namespace SubscriptionCommand.Domain
             ApplyNewChange(command.ToEvent(Sequence + 1));
 
         }
+
         public void SendInvitation(SendInvitationCommand command)
         {
             if (IsJoined)
@@ -93,23 +99,79 @@ namespace SubscriptionCommand.Domain
 
             ApplyNewChange(command.ToEvent(Sequence + 1));
 
+        } 
+        internal void ChangePermission(ChangePermissionCommand command)
+        {
+            if(command.UserId != UserId)
+            { 
+                throw new BusinessRuleViolationException("only owner can change permissions"); 
+            }
+            if (IsJoined)
+            {
+                throw new AlreadySentException("Cannot change permission of not joined members");
+            }
+
+            ApplyNewChange(command.ToEvent(Sequence + 1));
+        }
+
+        internal void JoinMember(JoinMemberCommand command)
+        { 
+            if (IsJoined)
+            {
+                throw new AlreadySentException("Member already joined");
+            }
+
+
+            ApplyNewChange(command.ToEvent(Sequence + 1));
+        }
+        internal void Leave(LeaveSubscriptionCommand command)
+        {
+            if (command.MemberId != UserId)
+            {
+                throw new BusinessRuleViolationException("cannot leave from Subscription that you are not in");
+            }
+            if (!IsJoined)
+            {
+                throw new BusinessRuleViolationException("cannot leave Subscription that you are not joined");
+            }
+
+            ApplyNewChange(command.ToEvent(Sequence + 1));
+        }
+        internal void RemoveMember(RemoveMemberCommand command)
+        {
+            if (!IsJoined)
+            {
+                throw new BusinessRuleViolationException("cannot leave Subscription that you are not joined");
+            }
+            ApplyNewChange(command.ToEvent(Sequence + 1));
         }
         protected override void Mutate(Event @event)
         {
             switch (@event)
             {
                 case InvitationSent invitationSent:
-                    Mutate(invitationSent);
-                    break;
+                    Mutate(invitationSent); break;
+
                 case InvitationCancelled invitationCancelled:
-                    Mutate(invitationCancelled);
-                    break;
+                    Mutate(invitationCancelled); break;
+
                 case InvitationAccepted invitationAccepted:
-                    Mutate(invitationAccepted);
-                    break;
+                    Mutate(invitationAccepted); break;
+
                 case InvitationRejected invitationRejected:
-                    Mutate(invitationRejected);
-                    break;
+                    Mutate(invitationRejected); break;
+
+                case PermissionChanged permissionChanged:
+                        Mutate(permissionChanged); break;
+
+                case MemberJoined memberJoined:
+                    Mutate(memberJoined); break;
+
+                case MemberLeft memberLeft:
+                    Mutate(memberLeft); break;
+
+                case MemberRemoved memberRemoved:
+                    Mutate (memberRemoved); break;
 
                 default:
                     throw new NotImplementedException();
@@ -133,7 +195,6 @@ namespace SubscriptionCommand.Domain
 
         private void Mutate(InvitationAccepted @event)
         {
-
             Sequence = @event.Sequence;
             var invitation = Invitations.MaxBy(x => x.Id) ?? throw new ArgumentNullException();
             invitation.Status = InvitationStatus.Accepted;
@@ -146,5 +207,30 @@ namespace SubscriptionCommand.Domain
             UserId = Guid.Parse(@event.UserId); 
             Invitations.Add(Invitation.Create(@event.Data.UserId, @event.Data.SubscriptionId));
         }
+
+        private void Mutate(PermissionChanged @event)
+        {
+            Sequence = @event.Sequence;
+            Permission = @event.Data.Permission;
+        }
+
+        private void Mutate(MemberJoined@event)
+        {
+            Sequence = @event.Sequence;
+            Permission = @event.Data.Permission;
+            IsJoined = true;
+        }
+        private void Mutate(MemberLeft @event)
+        {
+            Sequence = @event.Sequence;
+            IsJoined = false;
+        }
+        private void Mutate(MemberRemoved @event)
+        {
+            Sequence = @event.Sequence;
+            IsJoined = false;
+        }
+
+
     }
 }

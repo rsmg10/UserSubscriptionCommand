@@ -2,7 +2,7 @@
 using SubscriptionCommand.Abstraction;
 using SubscriptionCommand.Domain;
 using SubscriptionCommand.Exceptions;
-using SubscriptionCommand.Extenstions;
+using SubscriptionCommand.Extensions; 
 using SubscriptionCommandProto;
 
 namespace SubscriptionCommand.Commands.AcceptInvitation

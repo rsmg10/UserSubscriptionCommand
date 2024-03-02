@@ -1,8 +1,6 @@
-
-
 using Grpc.Core;
 using MediatR;
-using SubscriptionCommand.Extenstions;
+using SubscriptionCommand.Extensions;
 using SubscriptionCommandProto;
 
 namespace SubscriptionCommand.Services;
@@ -21,18 +19,8 @@ public class InvitationService : SubscriptionCommandProto.SubscriptionCommand.Su
 
     public override async Task<Response> SendInvitation(SendInvitationRequest request, ServerCallContext context)
     {
-        try
-        {
-
             var result = await _mediator.Send(request.ToCommand());
             return result;
-
-        }
-        catch (Exception e)
-        {
-
-            throw;
-        }
     }
     public override async Task<Response> AcceptInvitation(AcceptInvitationRequest request, ServerCallContext context)
     { 
@@ -49,5 +37,35 @@ public class InvitationService : SubscriptionCommandProto.SubscriptionCommand.Su
         var result = await _mediator.Send(request.ToCommand());
         return result;
     }
-    
+
+
+    // memeber uses this to leave subscription
+    public override async Task<Response> Leave(LeaveRequest request, ServerCallContext context)
+    {
+        var result = await _mediator.Send(request.ToCommand());
+        return result;
+    }
+
+    public override async Task<Response> ChangePermission(ChangePermissionRequest request, ServerCallContext context)
+    {
+        var result = await _mediator.Send(request.ToCommand());
+        return result;
+    }
+
+    // admin uses this to add member to subscription
+    public override async Task<Response> JoinMember(JoinMemberRequest request, ServerCallContext context)
+    {
+        var result = await _mediator.Send(request.ToCommand());
+        return result;
+    }
+
+    // admin uses this to remove member from subscription
+    public override async Task<Response> RemoveMember(RemoveMemberRequest request, ServerCallContext context)
+    {
+        var result = await _mediator.Send(request.ToCommand());
+        return result;
+    } 
+
+
+
 }

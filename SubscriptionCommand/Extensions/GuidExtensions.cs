@@ -1,8 +1,5 @@
-﻿using SubscriptionCommand.Commands.AcceptInvitation;
-using SubscriptionCommand.Commands.SendInvitation;
-using SubscriptionCommand.Events;
-
-namespace SubscriptionCommand.Extenstions
+﻿
+namespace SubscriptionCommand.Extensions
 {
     public static class GuidExtensions
     { 

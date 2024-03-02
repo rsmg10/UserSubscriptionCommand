@@ -1,4 +1,6 @@
-﻿namespace SubscriptionCommand.Events
+﻿using SubscriptionCommand.Domain.Enums;
+
+namespace SubscriptionCommand.Events
 {
     public record InvitationSent(
             Guid AggregateId,
@@ -9,6 +11,6 @@
             int Version
         ) : Event<InvitationSentData>(AggregateId: AggregateId, Data: Data, DateTime: DateTime, Sequence: Sequence, UserId: UserId, Version: Version);
 
-    public record InvitationSentData( Guid UserId, Guid SubscriptionId);
+    public record InvitationSentData( Guid UserId, Guid SubscriptionId,  Permissions Permission);
 
 }
