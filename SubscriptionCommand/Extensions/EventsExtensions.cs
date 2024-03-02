@@ -32,16 +32,16 @@ namespace SubscriptionCommand.Extensions
                 null,
                 DateTime.UtcNow,
                 sequence,
-                command.UserId.ToString(),
+                command.MemberId.ToString(),
                 Version: 1);
         }
-        public static InvitationCancelled ToEvent(this CancelInvitationCommand commnad, int sequence)
+        public static InvitationCancelled ToEvent(this CancelInvitationCommand command, int sequence)
         {
-            return new InvitationCancelled(GuidExtensions.CombineGuids(commnad.SubscriptionId, commnad.MemberId),
+            return new InvitationCancelled(GuidExtensions.CombineGuids(command.SubscriptionId, command.MemberId),
                 null,
                 DateTime.UtcNow,
                 sequence,
-                commnad.UserId.ToString(),
+                command.UserId.ToString(),
                 Version: 1);
         }
         public static InvitationAccepted ToEvent(this AcceptInvitationCommand command, int sequence)
@@ -50,7 +50,7 @@ namespace SubscriptionCommand.Extensions
                 null,
                 DateTime.UtcNow,
                 sequence,
-                command.UserId.ToString(),
+                command.MemberId.ToString(),
                 Version: 1);
         }
         public static PermissionChanged ToEvent(this ChangePermissionCommand command, int sequence)
@@ -84,11 +84,11 @@ namespace SubscriptionCommand.Extensions
         }
         public static MemberRemoved ToEvent(this RemoveMemberCommand request, int sequence)
         {
-            return new MemberRemoved(GuidExtensions.CombineGuids(request.SubscriptionId, request.command),
-                new MemberRemovedData(request.UserId, request.SubscriptionId, request.command),
+            return new MemberRemoved(GuidExtensions.CombineGuids(request.SubscriptionId, request.UserId),
+                new MemberRemovedData(request.UserId, request.SubscriptionId, request.UserId),
                 DateTime.UtcNow,
                 sequence,
-                request.command.ToString(),
+                request.UserId.ToString(),
                 Version: 1);
         }
     }

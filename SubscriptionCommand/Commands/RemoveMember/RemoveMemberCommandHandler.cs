@@ -20,7 +20,8 @@ namespace SubscriptionCommand.Commands.RemoveMember
 
             // validate account, subscription, that user is ownder or admin
 
-            var events = await _eventStore.GetAllAsync(GuidExtensions.CombineGuids(command.SubscriptionId, command.command), cancellationToken)
+            var events = await _eventStore.GetAllAsync(GuidExtensions.CombineGuids(command.SubscriptionId, command.MemberId), cancellationToken);
+
             var subscriptionAggregate = UserSubscription.LoadFromHistory(events);
 
             subscriptionAggregate.RemoveMember(command);
