@@ -19,10 +19,10 @@ message JoinedSubscriptionResponse {
 message SubscriptionVm {
   string id = 1;
   string name = 2;
-  string user_id = 3;
-  string owner_id = 4;
-  string created_at = 5;
-  int64 permissions = 6;
+  string owner_id = 3;
+  string owner_name = 3;
+  string created_at = 4;
+  int64 permissions = 5;
 }
 
 message PendingInvitationsReceivedRequest {
@@ -40,8 +40,6 @@ message MembersInSubscriptionRequest {
 message MembersInSubscriptionResponse {
   repeated Member members = 1;
 }
-
-
  
 message PendingInvitationsSentRequest {
   string user_id = 1;
@@ -49,14 +47,12 @@ message PendingInvitationsSentRequest {
 message PendingInvitationsSentResponse {
   repeated Invitation invitations = 1;
 }
-
-
-
+ 
  message Invitation {
-   string subscription_name = 1;
-   string id = 2;
-   string sent_by = 3;
-   string owner_id = 4;
+   string id =1;
+   string subscription_name = 2;
+   string owner_id = 3;
+   string member_id = 4;
    string created_at = 5;
  }
  message Member{
