@@ -11,6 +11,6 @@ namespace SubscriptionCommand.Events
             int Version
         ) : Event<InvitationSentData>(AggregateId: AggregateId, Data: Data, DateTime: DateTime, Sequence: Sequence, UserId: UserId, Version: Version);
 
-    public record InvitationSentData( Guid UserId, Guid SubscriptionId,  Permissions Permission);
+    public record InvitationSentData(Guid UserId, Guid SubscriptionId, Guid MemberId,  Permissions Permission);
 
 }

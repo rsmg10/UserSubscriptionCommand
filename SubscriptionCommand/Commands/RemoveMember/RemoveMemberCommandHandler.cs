@@ -25,6 +25,8 @@ namespace SubscriptionCommand.Commands.RemoveMember
             var subscriptionAggregate = UserSubscription.LoadFromHistory(events);
 
             subscriptionAggregate.RemoveMember(command);
+
+            await _eventStore.CommitAsync(subscriptionAggregate, cancellationToken);
             return new Response
             {
                 Id = command.UserId.ToString(),

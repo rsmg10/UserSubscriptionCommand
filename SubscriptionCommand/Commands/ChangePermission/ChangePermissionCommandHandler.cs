@@ -3,6 +3,7 @@ using MediatR;
 using SubscriptionCommand.Abstraction;
 using SubscriptionCommand.Domain;
 using SubscriptionCommand.Domain.Enums;
+using SubscriptionCommand.Exceptions;
 using SubscriptionCommand.Extensions;
 using SubscriptionCommandProto;
 
@@ -24,6 +25,9 @@ namespace SubscriptionCommand.Commands.ChangePermission
 
             var aggregateId = GuidExtensions.CombineGuids(command.SubscriptionId, command.MemberId);
             var events = await _eventStore.GetAllAsync(aggregateId, cancellationToken);
+            if(!events.Any() ) {
+                throw new NotFoundException("aggregate id not found");
+            }
             var subscriptionAggregate = UserSubscription.LoadFromHistory(events);
             
             subscriptionAggregate.ChangePermission(command);

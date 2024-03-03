@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using SubscriptionCommand.Abstraction;
 using SubscriptionCommand.Infrastructure.Presistance;
 using System;
 using System.Collections.Generic;
@@ -16,6 +17,9 @@ namespace SubscriptionCommand.Test
     {
         protected readonly WebApplicationFactory<Program> Factory;
         protected readonly ApplicationDatabase Database;
+
+        protected readonly IEventStore EventStore;
+
         public BaseTester(WebApplicationFactory<Program> factory, ITestOutputHelper testOutput)
         {
             Factory = factory;
@@ -30,9 +34,8 @@ namespace SubscriptionCommand.Test
             var scope = Factory.Services.CreateScope();
 
             Database = scope.ServiceProvider.GetService<ApplicationDatabase>()!; 
+            EventStore = scope.ServiceProvider.GetService<IEventStore>()!; 
         }
-
-
-
+         
     }
 }

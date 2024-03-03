@@ -22,7 +22,15 @@ namespace SubscriptionCommand.Commands.JoinMember
 
             var events = await _eventStore.GetAllAsync(GuidExtensions.CombineGuids(request.SubscriptionId, request.MemberId), cancellationToken);
 
-            var subscriptionAggregate = UserSubscription.LoadFromHistory(events);
+
+            bool isNew = (!events.Any() || events is null);
+
+            var subscriptionAggregate = isNew ?
+                 new UserSubscription() :
+                UserSubscription.LoadFromHistory(events!);
+
+
+            subscriptionAggregate = UserSubscription.LoadFromHistory(events!);
             subscriptionAggregate.JoinMember(request);
             await _eventStore.CommitAsync(subscriptionAggregate, cancellationToken);
 

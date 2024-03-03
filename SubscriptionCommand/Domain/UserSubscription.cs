@@ -21,11 +21,12 @@ namespace SubscriptionCommand.Domain
     public class UserSubscription : Aggregate<UserSubscription>, IAggregate
     {
         public UserSubscription() { }
-        public Guid UserId { get; set; }
+        public Guid OwnerId { get; set; }
+        public Guid MemberId { get; set; }
         public SubscriptionType Type { get; set; }
         public Permissions Permission { get; set; }
-        private List<Invitation> Invitations { get; set; } = new List<Invitation>();
-        private bool IsJoined { get; set; }
+        public List<Invitation> Invitations { get; set; } = new List<Invitation>();
+        public bool IsJoined { get; set; }
 
  
         public void RejectInvitation(RejectInvitationCommand command)
@@ -55,15 +56,14 @@ namespace SubscriptionCommand.Domain
             if (Type is SubscriptionType.Personal)
                 throw new BusinessRuleViolationException("this subscription's type is invalid");
 
-
             ApplyNewChange(command.ToEvent(Sequence + 1));
-
+            ApplyNewChange(command.ToJoinedEvent(Sequence + 1));
         }
 
 
         public void CancelInvitation(CancelInvitationCommand command)
         {
-            if (command.UserId != UserId)
+            if (command.UserId != OwnerId)
                 throw new BusinessRuleViolationException("you are not allowed to cancel this invitation");
             if (IsJoined)
             {
@@ -102,11 +102,11 @@ namespace SubscriptionCommand.Domain
         } 
         internal void ChangePermission(ChangePermissionCommand command)
         {
-            if(command.UserId != UserId)
-            { 
-                throw new BusinessRuleViolationException("only owner can change permissions"); 
-            }
-            if (IsJoined)
+            //if(command.UserId != UserId)
+            //{ 
+            //    throw new BusinessRuleViolationException("only owner can change permissions"); 
+            //}
+            if (!IsJoined)
             {
                 throw new AlreadySentException("Cannot change permission of not joined members");
             }
@@ -120,13 +120,17 @@ namespace SubscriptionCommand.Domain
             {
                 throw new AlreadySentException("Member already joined");
             }
-
+     
+            if (Type is SubscriptionType.Personal)
+            {
+                throw new BusinessRuleViolationException("this subscription's type is invalid");
+            }
 
             ApplyNewChange(command.ToEvent(Sequence + 1));
         }
         internal void Leave(LeaveSubscriptionCommand command)
         {
-            if (command.MemberId != UserId)
+            if (command.MemberId != MemberId)
             {
                 throw new BusinessRuleViolationException("cannot leave from Subscription that you are not in");
             }
@@ -179,7 +183,7 @@ namespace SubscriptionCommand.Domain
         }
 
         private void Mutate(InvitationCancelled @event)
-        {
+        { 
             Sequence = @event.Sequence;
             var invitation = Invitations.MaxBy(x => x.Id) ?? throw new ArgumentNullException();
             invitation.Status = InvitationStatus.Cancelled;
@@ -190,7 +194,7 @@ namespace SubscriptionCommand.Domain
             Sequence = @event.Sequence;
             var invitation = Invitations.MaxBy(x => x.Id) ?? throw new ArgumentNullException();
             invitation.Status = InvitationStatus.Rejected;
-            IsJoined = false;
+            
         }
 
         private void Mutate(InvitationAccepted @event)
@@ -198,13 +202,14 @@ namespace SubscriptionCommand.Domain
             Sequence = @event.Sequence;
             var invitation = Invitations.MaxBy(x => x.Id) ?? throw new ArgumentNullException();
             invitation.Status = InvitationStatus.Accepted;
-            IsJoined = true;
         }
 
         private void Mutate(InvitationSent @event)
         {
             Sequence = @event.Sequence;
-            UserId = Guid.Parse(@event.UserId); 
+            Id = @event.AggregateId;
+            OwnerId = Guid.Parse(@event.UserId); 
+            MemberId = @event.Data.MemberId; 
             Invitations.Add(Invitation.Create(@event.Data.UserId, @event.Data.SubscriptionId));
         }
 
@@ -217,7 +222,9 @@ namespace SubscriptionCommand.Domain
         private void Mutate(MemberJoined@event)
         {
             Sequence = @event.Sequence;
+            Id = @event.AggregateId;
             Permission = @event.Data.Permission;
+            MemberId = @event.Data.MemberId;
             IsJoined = true;
         }
         private void Mutate(MemberLeft @event)

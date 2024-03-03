@@ -39,7 +39,7 @@ public class InvitationService : SubscriptionCommandProto.SubscriptionCommand.Su
     }
 
 
-    // memeber uses this to leave subscription
+    // member uses this to leave subscription
     public override async Task<Response> Leave(LeaveRequest request, ServerCallContext context)
     {
         var result = await _mediator.Send(request.ToCommand());

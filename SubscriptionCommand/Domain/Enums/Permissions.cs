@@ -3,7 +3,8 @@
 [Flags]
 public enum Permissions : long
 {
-    Transfer,
-    PurchaseCards,
-    ManageDevices
+    None = 0,
+    Transfer = 1,
+    PurchaseCards = 2,
+    ManageDevices = 4
 }

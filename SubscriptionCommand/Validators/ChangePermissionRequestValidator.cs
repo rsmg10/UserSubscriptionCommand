@@ -15,5 +15,5 @@ public class ChangePermissionRequestValidator : AbstractValidator<ChangePermissi
         RuleFor(x => (Permissions)x.Permission).IsInEnum(); 
     }
 }
-}
+
  

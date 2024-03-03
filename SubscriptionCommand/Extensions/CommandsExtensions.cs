@@ -66,8 +66,8 @@ namespace SubscriptionCommand.Extensions
         {
             return new ChangePermissionCommand(request.AccountId.ToGuid(),
                     request.SubscriptionId.ToGuid(),
-                    request.UserId.ToGuid(),
                     request.MemberId.ToGuid(),
+                    request.UserId.ToGuid(),
                     (Permissions)request.Permission); 
         }
         public static LeaveSubscriptionCommand ToCommand(this LeaveRequest request)

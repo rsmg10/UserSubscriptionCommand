@@ -3,9 +3,13 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
-using SubscriptionCommand.Commands.SendInvitation;
+using SubscriptionCommand.Domain;
+using SubscriptionCommand.Domain.Enums;
+using SubscriptionCommand.Events;
+using SubscriptionCommand.Extensions;
 using SubscriptionCommand.Infrastructure.Presistance;
 using SubscriptionCommandProto;
+using System.Text.Json;
 using Xunit.Abstractions;
 
 namespace SubscriptionCommand.Test
@@ -17,9 +21,7 @@ namespace SubscriptionCommand.Test
             : base(factory, testOutput)
         {
 
-        }
-
-        // test cases 
+        } 
 
         [Fact]
         public async Task SendInvitation_SendValidData_InvitationSent()
@@ -130,7 +132,7 @@ namespace SubscriptionCommand.Test
 
             Assert.NotNull(acceptInvitationAsync);
             int count = await Database.Events.CountAsync();
-            Assert.True(count == 2);
+            Assert.True(count == 3);
 
         }
         [Fact]
@@ -272,6 +274,172 @@ namespace SubscriptionCommand.Test
 
         }
 
+        /////
+        ///cases 
+        ///1 join 
+        ///2 change permission by admin
+        ///3 remove
+        ///4 
+
+
+
+        [Fact]
+        public async Task JoinMemberThenChangePermission_Valid()
+        {
+            var userId = Guid.NewGuid();
+            var memberId = Guid.NewGuid();
+            var subscriptionId = Guid.NewGuid();
+            var accountId = Guid.NewGuid();
+
+            var client = new SubscriptionCommandProto.SubscriptionCommand.SubscriptionCommandClient(Factory.CreateGrpcChannel());
+            var sendInvitationAsync = await client.JoinMemberAsync(new SubscriptionCommandProto.JoinMemberRequest
+            {
+                AccountId = accountId.ToString(),
+                MemberId = memberId.ToString(),
+                Permission = 7,
+                SubscriptionId = subscriptionId.ToString(),
+                UserId = userId.ToString()
+            });
+
+            Assert.NotNull(sendInvitationAsync);
+            
+            int count = await Database.Events.CountAsync();
+            Assert.True(count == 1);
+
+
+           var usersubscription = UserSubscription.LoadFromHistory(await EventStore.GetAllAsync(GuidExtensions.CombineGuids(subscriptionId, memberId), default));
+           Assert.NotNull(usersubscription);
+           Assert.True(usersubscription.Permission == (Permissions)7);
+           Assert.True(usersubscription.IsJoined);
+
+            // change permission 
+
+            var changePermission = await client.ChangePermissionAsync(new SubscriptionCommandProto.ChangePermissionRequest
+            {
+                AccountId = accountId.ToString(),
+                MemberId = memberId.ToString(),
+                Permission = 1,
+                SubscriptionId = subscriptionId.ToString(),
+                UserId = userId.ToString()
+            });
+
+            Assert.NotNull(changePermission);
+
+            count = await Database.Events.CountAsync();
+            Assert.True(count == 2);
+
+
+            usersubscription = UserSubscription.LoadFromHistory(await EventStore.GetAllAsync(GuidExtensions.CombineGuids(subscriptionId, memberId), default));
+            Assert.NotNull(usersubscription);
+            Assert.True(usersubscription.Permission == (Permissions)1);
+            Assert.True(usersubscription.IsJoined);
+
+        }
+
+        [Fact]
+        public async Task JoinMemberThenRemove_Valid()
+        {
+            var userId = Guid.NewGuid();
+            var memberId = Guid.NewGuid();
+            var subscriptionId = Guid.NewGuid();
+            var accountId = Guid.NewGuid();
+
+            var client = new SubscriptionCommandProto.SubscriptionCommand.SubscriptionCommandClient(Factory.CreateGrpcChannel());
+            var sendInvitationAsync = await client.JoinMemberAsync(new SubscriptionCommandProto.JoinMemberRequest
+            {
+                AccountId = accountId.ToString(),
+                MemberId = memberId.ToString(),
+                Permission = 7,
+                SubscriptionId = subscriptionId.ToString(),
+                UserId = userId.ToString()
+            });
+
+            Assert.NotNull(sendInvitationAsync);
+
+            var joinEvent = await Database.Events.ToListAsync();
+            Assert.True(joinEvent.Count == 1);
+            Assert.True(joinEvent.First().Type == nameof(MemberJoined));
+            string? data = joinEvent.First().Data;
+            MemberJoinedData? memberJoined = System.Text.Json.JsonSerializer.Deserialize<MemberJoinedData>(data);
+            Assert.True(memberJoined.JoinedBy == JoinedBy.Admin);
+
+            var usersubscription = UserSubscription.LoadFromHistory(await EventStore.GetAllAsync(GuidExtensions.CombineGuids(subscriptionId, memberId), default));
+            Assert.NotNull(usersubscription);
+            Assert.True(usersubscription.Permission == (Permissions)7);
+            Assert.True(usersubscription.IsJoined);
+
+            // remove member
+
+            var changePermission = await client.RemoveMemberAsync(new SubscriptionCommandProto.RemoveMemberRequest
+            {
+                AccountId = accountId.ToString(),
+                MemberId = memberId.ToString(), 
+                SubscriptionId = subscriptionId.ToString(),
+                UserId = userId.ToString()
+            });
+
+            Assert.NotNull(changePermission);
+
+            var count = await Database.Events.CountAsync();
+            Assert.True(count == 2);
+
+
+            usersubscription = UserSubscription.LoadFromHistory(await EventStore.GetAllAsync(GuidExtensions.CombineGuids(subscriptionId, memberId), default));
+            Assert.NotNull(usersubscription);
+            Assert.False(usersubscription.IsJoined);
+
+        }
+
+        [Fact]
+        public async Task JoinMemberThenLeave_Valid()
+        {
+            var userId = Guid.NewGuid();
+            var memberId = Guid.NewGuid();
+            var subscriptionId = Guid.NewGuid();
+            var accountId = Guid.NewGuid();
+
+            var client = new SubscriptionCommandProto.SubscriptionCommand.SubscriptionCommandClient(Factory.CreateGrpcChannel());
+            var sendInvitationAsync = await client.JoinMemberAsync(new SubscriptionCommandProto.JoinMemberRequest
+            {
+                AccountId = accountId.ToString(),
+                MemberId = memberId.ToString(),
+                Permission = 7,
+                SubscriptionId = subscriptionId.ToString(),
+                UserId = userId.ToString()
+            });
+
+            Assert.NotNull(sendInvitationAsync);
+
+            var joinEvent = await Database.Events.ToListAsync();
+            Assert.True(joinEvent.Count == 1);
+            Assert.True(joinEvent.First().Type == nameof(MemberJoined));
+            Assert.True(System.Text.Json.JsonSerializer.Deserialize<MemberJoinedData>(joinEvent.First().Data).JoinedBy == JoinedBy.Admin);
+
+            var userSubscription = UserSubscription.LoadFromHistory(await EventStore.GetAllAsync(GuidExtensions.CombineGuids(subscriptionId, memberId), default));
+            Assert.NotNull(userSubscription);
+            Assert.True(userSubscription.Permission == (Permissions)7);
+            Assert.True(userSubscription.IsJoined);
+
+            // leave 
+
+            var leaveRequest = await client.LeaveAsync(new SubscriptionCommandProto.LeaveRequest
+            {
+                AccountId = accountId.ToString(),
+                MemberId = memberId.ToString(),
+                SubscriptionId = subscriptionId.ToString()
+            });
+
+            Assert.NotNull(leaveRequest);
+
+            var count = await Database.Events.CountAsync();
+            Assert.True(count == 2);
+
+
+            userSubscription = UserSubscription.LoadFromHistory(await EventStore.GetAllAsync(GuidExtensions.CombineGuids(subscriptionId, memberId), default));
+            Assert.NotNull(userSubscription); 
+            Assert.False(userSubscription.IsJoined);
+
+        }
 
 
     }

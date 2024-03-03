@@ -20,7 +20,7 @@ namespace SubscriptionCommand.Behaviours;
             { 
                 Console.WriteLine(e.InnerException);
 
-                throw e;
+                throw;
             }
 
         }

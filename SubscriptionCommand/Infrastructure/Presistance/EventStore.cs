@@ -2,6 +2,7 @@
 using SubscriptionCommand.Abstraction;
 using SubscriptionCommand.Domain;
 using SubscriptionCommand.Events;
+using SubscriptionCommand.Extensions;
 using SubscriptionCommand.Infrastructure.MessageBus;
 using System.Text.Json;
 
@@ -54,6 +55,9 @@ namespace SubscriptionCommand.Infrastructure.Presistance
             return events1;
 
         }
+
+  
+
         public Event MapToEvent(EventEntity e)
         { 
  
@@ -63,6 +67,10 @@ namespace SubscriptionCommand.Infrastructure.Presistance
                 nameof(InvitationAccepted) => new InvitationAccepted(e.AggregateId, JsonSerializer.Deserialize<InvitationAcceptedData>(e.Data), e.DateTime, e.Sequence, e.UserId, e.Version),
                 nameof(InvitationCancelled) => new InvitationCancelled(e.AggregateId, JsonSerializer.Deserialize<InvitationCancelledData>(e.Data), e.DateTime, e.Sequence, e.UserId, e.Version),
                 nameof(InvitationRejected) => new InvitationRejected(e.AggregateId, JsonSerializer.Deserialize<InvitationRejectedData>(e.Data), e.DateTime, e.Sequence, e.UserId, e.Version),
+                nameof(MemberJoined) => new MemberJoined(e.AggregateId, JsonSerializer.Deserialize<MemberJoinedData>(e.Data), e.DateTime, e.Sequence, e.UserId, e.Version),
+                nameof(MemberRemoved) => new MemberRemoved(e.AggregateId, JsonSerializer.Deserialize<MemberRemovedData>(e.Data), e.DateTime, e.Sequence, e.UserId, e.Version),
+                nameof(PermissionChanged) => new PermissionChanged(e.AggregateId, JsonSerializer.Deserialize<PermissionChangedData>(e.Data), e.DateTime, e.Sequence, e.UserId, e.Version),
+                nameof(MemberLeft) => new MemberLeft(e.AggregateId, JsonSerializer.Deserialize<MemberLeftData>(e.Data), e.DateTime, e.Sequence, e.UserId, e.Version),
                 _ => throw new Exception("Type not defined Exception"),
             };
         }
