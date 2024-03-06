@@ -185,14 +185,14 @@ namespace SubscriptionCommand.Domain
         private void Mutate(InvitationCancelled @event)
         { 
             Sequence = @event.Sequence;
-            var invitation = Invitations.MaxBy(x => x.Id) ?? throw new ArgumentNullException();
+            var invitation = Invitations.MaxBy(x => x.DateTime) ?? throw new ArgumentNullException();
             invitation.Status = InvitationStatus.Cancelled;
         }
 
         private void Mutate(InvitationRejected @event)
         {
             Sequence = @event.Sequence;
-            var invitation = Invitations.MaxBy(x => x.Id) ?? throw new ArgumentNullException();
+            var invitation = Invitations.MaxBy(x => x.DateTime) ?? throw new ArgumentNullException();
             invitation.Status = InvitationStatus.Rejected;
             
         }
@@ -200,7 +200,7 @@ namespace SubscriptionCommand.Domain
         private void Mutate(InvitationAccepted @event)
         {
             Sequence = @event.Sequence;
-            var invitation = Invitations.MaxBy(x => x.Id) ?? throw new ArgumentNullException();
+            var invitation = Invitations.MaxBy(x => x.DateTime) ?? throw new ArgumentNullException();
             invitation.Status = InvitationStatus.Accepted;
         }
 
@@ -210,7 +210,7 @@ namespace SubscriptionCommand.Domain
             Id = @event.AggregateId;
             OwnerId = Guid.Parse(@event.UserId); 
             MemberId = @event.Data.MemberId; 
-            Invitations.Add(Invitation.Create(@event.Data.UserId, @event.Data.SubscriptionId));
+            Invitations.Add(Invitation.Create(@event.Data.InvitationId, @event.Data.UserId, @event.Data.SubscriptionId));
         }
 
         private void Mutate(PermissionChanged @event)

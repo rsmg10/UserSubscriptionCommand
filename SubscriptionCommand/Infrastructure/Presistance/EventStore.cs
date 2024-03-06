@@ -2,7 +2,6 @@
 using SubscriptionCommand.Abstraction;
 using SubscriptionCommand.Domain;
 using SubscriptionCommand.Events;
-using SubscriptionCommand.Extensions;
 using SubscriptionCommand.Infrastructure.MessageBus;
 using System.Text.Json;
 
@@ -48,19 +47,17 @@ namespace SubscriptionCommand.Infrastructure.Presistance
         public async Task<List<Event>> GetAllAsync(Guid aggregateId, CancellationToken cancellationToken)
         {
 
-            var events = await _db.Events.Where(e => e.AggregateId == aggregateId)
+            var eventEntities = await _db.Events.Where(e => e.AggregateId == aggregateId)
                 .OrderBy(e => e.Sequence).ToListAsync(cancellationToken: cancellationToken);
 
-            List<Event> events1 = events.Select(e => MapToEvent(e)).ToList();
-            return events1;
-
+            List<Event> events = eventEntities.Select(e => MapToEvent(e)).ToList();
+            return events;
         }
 
   
 
         public Event MapToEvent(EventEntity e)
         { 
- 
             return e.Type switch
             {
                 nameof(InvitationSent) => new InvitationSent(e.AggregateId, JsonSerializer.Deserialize<InvitationSentData>(e.Data), e.DateTime, e.Sequence, e.UserId, e.Version),

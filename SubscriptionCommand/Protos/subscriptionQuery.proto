@@ -42,7 +42,9 @@ message MembersInSubscriptionResponse {
 }
  
 message PendingInvitationsSentRequest {
-  string user_id = 1;
+  string account_id = 1;
+  string subscription_id = 2;
+  string user_id = 3;
 }
 message PendingInvitationsSentResponse {
   repeated Invitation invitations = 1;

@@ -36,7 +36,7 @@ namespace SubscriptionCommand.Events
     int Sequence,
     string UserId, 
     int Version
-    ) : Event( Id: default, AggregateId: AggregateId, DateTime: DateTime, Sequence: Sequence, UserId: UserId, Version: Version);
+    ) : Event(Id: default, AggregateId: AggregateId, DateTime: DateTime, Sequence: Sequence, UserId: UserId, Version: Version);
  
     public interface IEvent
     {

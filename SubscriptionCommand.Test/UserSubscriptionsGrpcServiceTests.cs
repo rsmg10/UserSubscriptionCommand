@@ -274,12 +274,6 @@ namespace SubscriptionCommand.Test
 
         }
 
-        /////
-        ///cases 
-        ///1 join 
-        ///2 change permission by admin
-        ///3 remove
-        ///4 
 
 
 

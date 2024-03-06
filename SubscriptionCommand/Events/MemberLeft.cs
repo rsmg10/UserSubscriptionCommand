@@ -1,6 +1,4 @@
-﻿using SubscriptionCommand.Events;
-
-namespace SubscriptionCommand.Extensions
+﻿namespace SubscriptionCommand.Events
 {
     public record MemberLeft(
            Guid AggregateId,

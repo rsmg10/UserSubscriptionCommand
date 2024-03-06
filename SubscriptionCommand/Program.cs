@@ -16,16 +16,8 @@ var builder = WebApplication.CreateBuilder(args);
   
 builder.Services.AddMediatR(o => o.RegisterServicesFromAssemblyContaining<Program>());
 builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ExceptionBehaviour<,>));
-builder.Services.AddDbContext<ApplicationDatabase>(o => o.UseSqlServer("Data Source=.;Database=ASHSubscriptionCommand;Trusted_Connection=true;TrustServerCertificate=True"));
+builder.Services.AddDbContext<ApplicationDatabase>(o => o.UseSqlServer(builder.Configuration.GetConnectionString("ApplicationDatabase")));
 builder.Services.AddScoped<IEventStore, EventStore>();
-
-using (var scope= builder.Services.BuildServiceProvider().CreateScope())
-{
-
-    var db = scope.ServiceProvider.GetRequiredService<ApplicationDatabase>();
-    db.Database.Migrate();
-
-}
 
 
 var busConnection = builder.Configuration["ServiceBusClient"];
@@ -46,6 +38,9 @@ app.MapGet("/",
     () =>
         "Communication with gRPC endpoints must be made through a gRPC client. To learn how to create a client, visit: https://go.microsoft.com/fwlink/?linkid=2086909");
 app.UseMiddleware<ExceptionMiddleware>();
+var scope = app.Services.CreateScope();
+var ctx = scope.ServiceProvider.GetRequiredService<ApplicationDatabase>();
+ctx.Database.Migrate();
 app.Run();
 
 namespace SubscriptionCommand

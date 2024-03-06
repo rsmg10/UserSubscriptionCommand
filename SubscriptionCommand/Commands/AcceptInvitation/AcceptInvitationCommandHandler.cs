@@ -16,9 +16,7 @@ namespace SubscriptionCommand.Commands.AcceptInvitation
             _eventStore = eventStore;
         }
         public async Task<Response> Handle(AcceptInvitationCommand request, CancellationToken cancellationToken)
-        {
-            if (request.UserId == request.MemberId)
-                throw new BusinessRuleViolationException("cant send invitation to same user");
+        { 
 
             var events = await _eventStore.GetAllAsync(GuidExtensions.CombineGuids(request.SubscriptionId, request.MemberId), cancellationToken);
 

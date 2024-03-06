@@ -17,8 +17,9 @@ namespace SubscriptionCommand.Behaviours;
                 return await next();
             }
             catch (Exception e)
-            { 
-                Console.WriteLine(e.InnerException);
+            {
+            await Console.Out.WriteLineAsync(e.ToString());
+            Console.WriteLine(e.InnerException);
 
                 throw;
             }
