@@ -19,7 +19,9 @@ public class ExceptionMiddleware
         catch (Exception ex)
         {
 
-            
+            Console.WriteLine(ex.Message);  
+            Console.WriteLine(ex.InnerException);
+
         }
     }
 }

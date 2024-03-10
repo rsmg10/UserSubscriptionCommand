@@ -1,0 +1,39 @@
+version: '3.4'
+
+services:
+  command:
+    image: elgusbi/subscription-command
+    container_name: command
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      - db
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:8080;https://+:443
+      - ConnectionStrings__ApplicationDatabase=server=commandDb;database=Person;User id=sa;Password=Pa$$Word111;MultipleActiveResultSets=true;TrustServerCertificate=True;
+    ports:
+      - "8001:8080"
+      - "8002:443"
+    volumes:
+      - ${APPDATA}/Microsoft/UserSecrets:/root/.microsoft/usersecrets:ro
+      - ${APPDATA}/ASP.NET/Https:/root/.aspnet/https:ro
+    restart: always
+    
+
+  db:
+    image: mcr.microsoft.com/mssql/server:2019-latest
+    container_name: commandDb
+    volumes:
+      - db_data:/var/opt/mssql/data
+    environment:
+      MSSQL_SA_PASSWORD: "Pa$$Word111"
+      ACCEPT_EULA: "Y"
+      # MSSQL_PID: "Express"
+    ports:
+      - "1441:1433"
+    restart: always
+
+volumes:
+  db_data:
