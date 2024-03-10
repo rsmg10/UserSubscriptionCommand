@@ -15,12 +15,20 @@ using SubscriptionCommand.Commands.JoinMember;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 using SubscriptionCommand.Commands.LeaveSubscription;
 using SubscriptionCommand.Commands.RemoveMember;
+using Azure.Core;
 
 namespace SubscriptionCommand.Domain
 {
     public class UserSubscription : Aggregate<UserSubscription>, IAggregate
     {
-        public UserSubscription() { }
+        public UserSubscription(Guid subscriptionId, Guid memberId) 
+        {
+            Id = GuidExtensions.CombineGuids(subscriptionId, memberId);
+        }
+        public UserSubscription()
+        {
+            
+        }
         public Guid OwnerId { get; set; }
         public Guid MemberId { get; set; }
         public SubscriptionType Type { get; set; }

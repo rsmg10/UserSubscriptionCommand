@@ -30,7 +30,7 @@ namespace SubscriptionCommand.Commands.SendInvitation
             bool isNew = (!events.Any() || events is null);
 
             var userSubscription = isNew ?
-                 new UserSubscription() :
+                 new UserSubscription(request.SubscriptionId, request.MemberId) :
                 UserSubscription.LoadFromHistory(events!);
 
             userSubscription.SendInvitation(request);

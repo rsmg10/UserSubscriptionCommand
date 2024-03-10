@@ -39,6 +39,7 @@ namespace SubscriptionCommand.Extensions
 
         public static SendInvitationCommand ToCommand(this SendInvitationRequest request)
         {
+            var s = Guid.NewGuid().ToString();
             return new SendInvitationCommand(request.UserId.ToGuid(),
                 request.MemberId.ToGuid(),
                 request.SubscriptionId.ToGuid(),

@@ -26,7 +26,7 @@ namespace SubscriptionCommand.Commands.JoinMember
             bool isNew = (!events.Any() || events is null);
 
             var subscriptionAggregate = isNew ?
-                 new UserSubscription() :
+                 new UserSubscription(request.SubscriptionId, request.MemberId) :
                 UserSubscription.LoadFromHistory(events!);
 
 

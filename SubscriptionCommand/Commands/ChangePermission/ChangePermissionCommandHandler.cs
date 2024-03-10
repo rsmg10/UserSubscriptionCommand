@@ -36,7 +36,7 @@ namespace SubscriptionCommand.Commands.ChangePermission
             return new Response()
             {
                 Id = command.UserId.ToString(),
-                Message = "invitation accepted"
+                Message = "Permission changed"
             };
 
         }
