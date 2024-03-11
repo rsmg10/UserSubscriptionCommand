@@ -2,28 +2,30 @@ version: '3.4'
 
 services:
   command:
-    image: elgusbi/subscription-command
+    image: elgusbi/subscription-command-new
+    user: root
     container_name: command
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: ./SubscriptionCommand/Dockerfile
     depends_on:
       - db
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
-      - ASPNETCORE_URLS=http://+:8080;https://+:443
-      - ConnectionStrings__ApplicationDatabase=server=commandDb;database=Person;User id=sa;Password=Pa$$Word111;MultipleActiveResultSets=true;TrustServerCertificate=True;
+      - ASPNETCORE_URLS=http://+:8080
+      - ConnectionStrings__ApplicationDatabase=Server=commandDb,1433;Database=ASHSubscriptionCommand;User ID=sa;Password=Pa$$Word111;Encrypt=False;
     ports:
       - "8001:8080"
       - "8002:443"
     volumes:
       - ${APPDATA}/Microsoft/UserSecrets:/root/.microsoft/usersecrets:ro
       - ${APPDATA}/ASP.NET/Https:/root/.aspnet/https:ro
+    networks:
+      - my-network
     restart: always
-    
-
   db:
     image: mcr.microsoft.com/mssql/server:2019-latest
+    user: root
     container_name: commandDb
     volumes:
       - db_data:/var/opt/mssql/data
@@ -33,7 +35,12 @@ services:
       # MSSQL_PID: "Express"
     ports:
       - "1441:1433"
-    restart: always
+    networks:
+      - my-network
+    restart: unless-stopped ## UnlessStopped  
 
 volumes:
   db_data:
+
+networks:
+  my-network:

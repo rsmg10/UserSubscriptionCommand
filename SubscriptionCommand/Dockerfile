@@ -23,3 +23,9 @@ WORKDIR /app
 COPY --from=publish /app/publish .
 ENTRYPOINT ["dotnet", "SubscriptionCommand.dll"]
 
+
+
+##COPY ["SubscriptionCommand.csproj", "SubscriptionCommand/"]
+##RUN dotnet restore "./SubscriptionCommand/SubscriptionCommand.csproj"
+##COPY . .
+##WORKDIR "/src"

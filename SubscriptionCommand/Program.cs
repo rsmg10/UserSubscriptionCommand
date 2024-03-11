@@ -19,7 +19,7 @@ Console.WriteLine(connectionString);
 
 builder.Services.AddMediatR(o => o.RegisterServicesFromAssemblyContaining<Program>());
 builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ExceptionBehaviour<,>));
-builder.Services.AddDbContext<ApplicationDatabase>(o => o.UseSqlServer(builder.Configuration.GetConnectionString("ApplicationDatabase")));
+builder.Services.AddDbContext<ApplicationDatabase>(o => o.UseSqlServer(connectionString));
 builder.Services.AddScoped<IEventStore, EventStore>();
 
 //builder.WebHost.ConfigureKestrel(serverOptions =>
@@ -31,8 +31,8 @@ builder.Services.AddScoped<IEventStore, EventStore>();
 //    serverOptions.Limits.Http2.KeepAlivePingDelay = TimeSpan.FromSeconds(30);
 //    serverOptions.Limits.Http2.KeepAlivePingTimeout = TimeSpan.FromMinutes(1);
 //    serverOptions.Limits.Http2.InitialConnectionWindowSize = 131_072;
-
 //});
+
 var busConnection = builder.Configuration["ServiceBusClient"];
 builder.Services.AddSingleton(new ServiceBusClient(busConnection));
 builder.Services.AddSingleton<AzureMessageBus>();
@@ -47,7 +47,7 @@ builder.Services.AddGrpc(options =>
 builder.Services.AddValidators();
 builder.Services.AddGrpcValidation();
 
-Console.WriteLine("______________________________TEST111_______________________________");
+Console.WriteLine("______________________________TEST2222222_______________________________");
 
 
 var app = builder.Build();
